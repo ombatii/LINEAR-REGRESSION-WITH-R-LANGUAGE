@@ -1,0 +1,428 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+# loading libraries
+```{r}
+library(dplyr)
+library(glmnet)
+library(boot)
+library(tidymodels)
+library(tidyverse)
+```
+
+*Question 1 (40 pts)*: This question is based on performing Cross-Validation. As you have learnt in class,
+Cross-Validation is a method to estimate the Test MSE or Test Mean Squared Error. In the past we used
+datasets from elsewhere and performed our analysis. In this question, we are going to simulate or create our
+own dataset. We will then use it to perform k-fold cross validation
+1.Copy/paste the following code chunk in your notebook and execute it to create the dataset
+
+```{r}
+set.seed(1)
+# We will first generate a vector of random numbers and call it X
+X <- rnorm(100)
+# Then we define the response variable using the following relationship.
+# The rnorm(100) term at the end is used to generate the random errors
+Y <- X - 2*(X*X) + rnorm(100)
+```
+
+In this dataset, what is n (number of observations that you generated) and what is p (the number of predictor variables)? Write out the model used to generate the data in equation form.
+*ANSWER*:n is 100 and p is 1
+
+## create dataframe containing X and Y
+```{r}
+#create dataframe containing X and Y
+dataset_1 <- data.frame(X,Y)
+dim(dataset_1)
+```
+*EXPLANATION*: The dataframe created has 2 columns and 100 rows
+
+## creating a model matrix by treating Y as the y variable and X as the predictors
+```{r}
+modmatrix <- model.matrix(Y ~.,dataset_1)
+str(modmatrix)
+```
+*EXPLANATION*:The structure of the model matrix  created.It provides us with the data frame with 100 observations(rows) of 2 variables;(Intercept and X) which are characters.
+
+## The first 10 rows of `modmatrix` 
+```{r}
+modmatrix
+```
+
+
+*OBSERVATION*: This output is the whole modmatrix(model matrix  created).It has two columns containing 100 observations and two columns(Intercept and X).
+
+
+
+2. Create a scatterplot of X and Y . What is your observation about the relationship between X and Y ?
+
+## Create a scatterplot of X and Y
+```{r}
+library(ggplot2)
+ggplot(dataset_1, aes(x = X, y = Y)) +
+    geom_point()
+```
+`OBERVATION`
+*Relationship between X and Y:* The data show an uphill pattern as you move from left to right then about X = 0.5 then  show a downhill pattern.This means there is no linear relationship between X and Y .
+
+3. Use the dataset created in part(1) and predict Y using X using polynomial regression in R. The models
+that you need to build are shown below. You can adapt the code used in lecture 6.2.5 (the glm() and
+poly(X,i) commands) for building the regression models. After building each model, set a random seed
+(use the same seed for each model) and then compute the 5-fold cross validation error. Do not perform
+any backward step-wise selection on these linear models that you build.:
+i. Y = β0 + β1X + e
+ii. Y = β0 + β1X + β2X2 + e
+iii. Y = β0 + β1X + β2X2 + β3X3 + e
+iv. Y = β0 + β1X + β2X2 + β3X3 + β4X4 + e
+Note that you may find it helpful to use the command data.frame() to create a single data set containing
+both X and Y 
+
+## i. Y = β0 + β1X + e
+```{r}
+library(boot)
+set.seed(12)
+model_full_1 <- glm(Y ~ X, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_1, K = 5)$delta[2]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.805133,
+which tells us on how our model performed.
+
+## ii. Y = β0 + β1X + β2X2 + e
+```{r}
+library(boot)
+set.seed(12)
+model_full_2 <- glm(Y ~ X + X^2, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_2, K = 5)$delta[1]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.963207,which tells us on how our model performed.
+
+## iii. Y = β0 + β1X + β2X2 + β3X3 + e
+```{r}
+library(boot)
+set.seed(12)
+model_full_3 <- glm(Y ~ X + X^2 + X^3 , data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_3, K = 5)$delta[1]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.963207,which tells us on how our model performed.
+
+## iv. Y = β0 + β1X + β2X2 + β3X3 + β4X4 + e
+```{r}
+library(boot)
+set.seed(12)
+model_full_4 <- glm(Y ~ X + X^2 + X^3 + X^4, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_4, K = 5)$delta[1]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.963207,which tells us on how our model performed.
+
+
+
+4. Repeat 3 using another seed and report your results. Are your results the same as what you got in 3
+? Why ?
+*CODES*
+## i. Y = β0 + β1X + e
+```{r}
+set.seed(121)
+model_full_1 <- glm(Y ~ X, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_1, K = 5)$delta[2]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.18355, which tells us on how our model performed.
+
+
+## statistical significance of the coefficient estimates from the model used to answer question 6
+```{r}
+summary(model_full_1)
+```
+*OBSERVATION*: The standard error of this model is 0.2619,which tells us on how our model performed.
+
+
+## ii. Y = β0 + β1X + β2X2 + e
+```{r}
+
+set.seed(121)
+model_full_2 <- glm(Y ~ X + X^2, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_2, K = 5)$delta[1]
+```
+*OBVERSERVATION*: The 5-fold cross validation error of this model is 7.254846,which tells us on how our model performed.
+
+## statistical significance of the coefficient estimates from the model used to answer question 6
+```{r}
+summary(model_full_2)
+```
+*OBSERVATION*:
+The standard error of the regression is the average distance that the observed values fall from the regression line. In this case, the observed values fall an average of 0.2619 units from the regression line,hence our model performed well.
+
+
+## iii. Y = β0 + β1X + β2X2 + β3X3 + e
+```{r}
+set.seed(121)
+model_full_3 <- glm(Y ~ X + X^2 + X^3 , data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_3, K = 5)$delta[1]
+```
+*OBSERVATION*: The 5-fold cross validation error of this model is 7.254846, which tells us on how our model performed.
+
+## statistical significance of the coefficient estimates from the model used to answer question 6
+```{r}
+summary(model_full_3)
+```
+*OBSERVATION*:
+The standard error of the regression is the average distance that the observed values fall from the regression line. In this case, the observed values fall an average of 0.2619 units from the regression line which is close to 0.1,hence our model performed well.
+
+## iv. Y = β0 + β1X + β2X2 + β3X3 + β4X4 + e
+```{r}
+set.seed(121)
+model_full_4 <- glm(Y ~ X + X^2 + X^3 + X^4, data = dataset_1)
+cv.glm(data = dataset_1, glmfit = model_full_4, K = 5)$delta[1]
+```
+*OBSERVATION*: The 5-fold cross validation error of this model is 7.254846 which is close to 0.1, which tells us on how our model performed.
+ 
+## statistical significance of the coefficient estimates from the model used to answer question 6
+```{r}
+summary(model_full_4)
+```
+*OBSERVATION*: The standard error of this model is 0.2619 which is close to 0.1, which tells us on how our model performed, hence the model performed well.
+
+
+*ANSWER*: The 5-fold cross validation error are different since we used Set seed of different values.
+
+5. Which of the models in 3 had the smallest 5-fold cross validation error ? Is this what you expected?
+Explain your answer.
+*ANSWER*
+Y = β0 + β1X + e
+Yes i didn't expect because it has few predictor variable hence would yield more 5-fold cross validation error.
+
+6. Comment on the statistical significance of the coefficient estimates that results from fitting each of
+the models in 3 using least squares. Do these results agree with the conclusions drawn based on the
+cross-validation results ?
+*ANSWER*
+Model  Y = β0 + β1X + e has different from the rest of the model while the rest have the same statistical significance of the coefficient estimates.
+They do not agree with the conclusions drawn based on the cross-validation results since on each mode the cross-validation error differ with Residual deviance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**Question 2 (30 pts)** This question uses the Advertising dataset from week 5.
+1. Code Linear Regression in R (use the tutorial file that was given last week for guidance) to build a model with sales as the dependent variable and TV and Radio as the predictor variables. Include the interaction  term TV × Radio. 2. Compute the bootstrapped errors for the coefficients in this model. Compare these with the errors from part(1). Are they different? Explain why.
+
+## Import dataset
+```{r}
+
+advertising <- advertising
+head(advertising)
+```
+
+## Linear Regression
+### Names of the columns in the dataset
+```{r}
+names(advertising)
+```
+### Building the model and getting the result from the model
+```{r}
+advertising_lm <- lm(sales ~ TV + radio + TV*radio, data = advertising)
+summary(advertising_lm)
+```
+*OBSERVATION*: The Residual Standard Error is gives the standard deviation of the residuals, and tells us about how large the prediction error is data,Which on our case is 0.9435,it is close to 0.1 hence the model performed well.
+
+
+##  Computing the bootstrapped errors for the coefficients in the model
+```{r}
+boot.function <- function (data, index) {
+  return(coef(lm(sales ~ TV + radio + TV*radio, data = advertising, subset = index)))
+}
+
+# We pass this function to the boot command below along with the dataset and the number of bootstrapped samples.
+  boot(advertising, boot.function, 1000)
+```
+*OBSERVATION*: The bootstrap estimate for the Std.Error of β0 is 0.87, while the bootstrap estimate for β1 is 0.0074,hence our model performed better.
+
+
+
+*ANSWERS*: The errors from part(1) and part(2) are different because the bootstrap estimate for the standard error of β0 is 0.3280880133 while for the part(1) is 2.479e-01.
+
+**Question 3 (40 pts)**:
+In this exercise we will predict the number of applications received using the other variables in the College.rda dataset. It has statistics for a large number of US Colleges from the 1995 issue of US News and World Report. It is a data frame with 777 observations on the following 18 variables.
+• Private: A factor with levels No and Yes indicating private or public university
+• Apps: Number of applications received
+• Accept: Number of applications accepted
+• Enroll: Number of new students enrolled
+• Top10perc: Pct. new students from top 10% of H.S. class
+• Top25perc: Pct. new students from top 25% of H.S. class
+• F.Undergrad: Number of fulltime undergraduates
+• P.Undergrad: Number of parttime undergraduates
+• Outstate: Out-of-state tuition
+• Room.Board: Room and board costs
+• Books: Estimated book costs
+• Personal: Estimated personal spending
+• PhD: Pct. of faculty with Ph.D.’s
+• Terminal: Pct. of faculty with terminal degree
+• S.F.Ratio: Student/faculty ratio
+• perc.alumni: Pct. alumni who donate
+• Expend: Instructional expenditure per student
+• Grad.Rate: Graduation rate
+
+
+1. Split the data into a training(70%) and a test(30%) set.
+
+##Split the data into a training(70%) and a test(30%) set
+```{r}
+set.seed(123)
+# Here we will assign 70% of data to the training set and the remaining to the test set
+train <- sample(544,233)
+College_Training <- College[train,]
+College_Test <- College[-train,]
+str(College_Training)
+```
+*OBSERVATION*: The output is the structure of the dataset,it contains 233 observation and 18 variables. Private coulmn contains factors while the rest contain numeric variables.
+
+2. Fit a linear model using Ordinary Least Squares (Linear Regression) on the training set and report the test error obtained. Use all columns and dont remove any using backward stepwise method.
+
+## Linear Regression
+### names of columns
+```{r}
+names(College)
+```
+### Creating the model
+```{r}
+College_lm <- lm(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate , 
+                data = College)
+```
+
+### summary of the model
+```{r}
+summary(College_lm)
+```
+
+*OBSERVATION:* The Residual standard error of the model of train set is 777,Multiple R-squared:  0.9398 and Adjusted R-squared:  0.9351
+
+### Make predictions using the test data
+
+```{r}
+x_test <- model.matrix(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate ,
+               data = College_Test)[,-1]
+y_test <- College_Test$App
+```
+### Generate predictions
+```{r}
+lm.pred <- predict(College_lm, newx = x_test)
+```
+
+### Compute the Test MSE
+```{r}
+mean((lm.pred - y_test)^2)
+```
+*OBSERVATION*:  Computed  Test MSE is 29904814,this is too big hence our model did not perform well.
+3. Fit a ridge regression model on the training set, with λ chosen by cross-validation. Report the test
+error obtained
+## Creating the model matrix
+```{r}
+x <- model.matrix(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate , College_Training)[,-1]
+y <- College_Training$Apps
+```
+## 2. Create a grid of values over which the ridge regression models need to be built and create ridge.mod
+```{r}
+
+grid <- 10^seq(10,-2, length = 100)
+
+# If alpha=0 then a ridge regression model is fit, and if alpha=1 then a lasso model is fit. We first fit a ridge regression model. We pass the x, y, alpha and lambda values
+
+ridge.mod <- glmnet(x, y, alpha = 0, lambda = grid)
+```
+## Select the best $\lambda$
+We use cross *Cross-Validation* to identify the best $\lambda$
+```{r}
+set.seed(11)
+cv.ridge <- cv.glmnet(x, y, alpha = 0)
+plot(cv.ridge)
+```
+```{r}
+bestlambda <- cv.ridge$lambda.min
+bestlambda
+```
+*OBSERVASTION:* The best value of lambda is 286.9712
+## Make predictions using the test data
+
+```{r}
+x.test <- model.matrix(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate , College_Training)[,-1]
+y.test <- College_Training$Apps
+```
+## Generate predictions
+```{r}
+ridge.pred <- predict(ridge.mod, s = bestlambda, newx = x.test)
+```
+## Compute the Test MSE
+```{r}
+mean((ridge.pred - y.test)^2)
+```
+*OBSEVARION:* THE Test MSE OF THE ridge regression model created is 660607.5.A good model has minimal Test MSE ,hence this model performed better than lasso model.
+
+4. Fit a lasso model on the training set, with λ chosen by cross-validation. Report the test error obtained, along with the number of non-zero coefficient estimates.
+
+## Create the model matrix 
+```{r}
+x <- model.matrix(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate , College_Training)[,-1]
+y <- College_Training$Apps
+```
+## Creating a grid of values over which the lasso regression models need to be built and creating lasso.mod
+```{r}
+grid <- 10^seq(10,-2, length = 100)
+
+# If $\alpha=0$ then a ridge regression model is fit, and if $\alpha=1$ then a lasso model is fit. We fit a lasso regression model. We pass the x, y, alpha and lambda values
+
+lasso.mod <- glmnet(x, y, alpha = 0, lambda = grid)
+```
+
+## Cross-Validation to find the best $\lambda$
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x, y, alpha = 1)
+plot(cv.out)
+```
+## Extracting the best $\lambda$
+```{r}
+bestlambda <- cv.out$lambda.min
+bestlambda
+```
+## Extracting coefficients at the best lambda
+```{r}
+out <- glmnet(x, y, alpha = 1, lambda = grid)
+lasso.coef <- predict(out, type = "coefficients", s = bestlambda)
+lasso.coef
+```
+## Make predictions using the test data
+```{r}
+x.test <- model.matrix(Apps ~ Private + Accept + Enroll + Top10perc + Top25perc + F.Undergrad + P.Undergrad + Outstate + Room.Board + Books + Personal + PhD + Terminal + S.F.Ratio + perc.alumni + Expend + Grad.Rate , College_Test)[,-1]
+y.test <- College_Test$App
+```
+# Generate predictions
+```{r}
+lasso.pred <- predict(lasso.mod, s = bestlambda, newx = x.test)
+```
+## Compute the Test MSE
+```{r}
+mean((lasso.pred - y.test)^2)
+```
+*OBSEVARION:* THE Test MSE OF the  lasso model model created is 1776184.A good model has minimal Test MSE ,hence lasso model did not perform well compared to ridge regression model.
+
+
+
+5. Comment on the results obtained. How accurately can we predict the number of college applications
+received ? Is there much difference among the test errors resulting from these three approaches?
+`ANSWER`:
+i) We can accurately can we predict the number of college applications by estimating using different models fitted on train set then prediction made in the test set.
+ii) There is much difference among the test errors resulting from these three approaches since each model produced different value of Test MSE.
